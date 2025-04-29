@@ -1,23 +1,24 @@
-const { Events } = require('discord.js');
+const { updateTeamMembers, updateEventDrivers } = require('../utils/updateStats');
 
 module.exports = {
-    name: Events.GuildMemberUpdate,
-    once: false,
+    name: 'guildMemberUpdate',
     async execute(oldMember, newMember) {
-        const serverId = '1306704630171963422';
-        const roleId = '1307756165849153688';
+        try {
+            const roleIdsToWatch = ['1291101540718870558', '1287721449057947669', '1290079131807256616'];
+            let hasChange = false;
 
-        if (newMember.guild.id !== serverId) return;
-
-        if (newMember.roles.cache.has(roleId)) {
-            const memberCount = newMember.guild.members.cache.filter(member => 
-                member.roles.cache.has(roleId)
-            ).size;
-
-            await newMember.client.user.setPresence({
-                activities: [{ name: `Customers: ${memberCount}`, type: 'WATCHING' }],
-                status: 'dnd',
+            roleIdsToWatch.forEach(roleId => {
+                if (oldMember.roles.cache.has(roleId) !== newMember.roles.cache.has(roleId)) {
+                    hasChange = true;
+                }
             });
+
+            if (hasChange) {
+                await updateEventDrivers(newMember.guild);
+                await updateTeamMembers(newMember.guild);
+            }
+        } catch (err) {
+            console.error('Error in guildMemberUpdate event handler:', err);
         }
-    },
+    }
 };

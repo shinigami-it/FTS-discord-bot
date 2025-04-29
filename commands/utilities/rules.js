@@ -27,7 +27,7 @@ module.exports = {
                 .setTitle('**Help**')
                 .setDescription('Displays a help menu with useful information about the bot. This includes links to important channels like the rules and the support server, as well as details on how to get additional assistance.')
                 .setColor('#6400ff')
-                .setAuthor({ name: 'Yuki - Est. 2023', iconURL: 'https://i.imgur.com/le0aT56.png', url: 'https://discord.gg/ZyRe42SR4C' })
+                .setAuthor({ name: 'FTS - Est. 2023', iconURL: 'https://i.imgur.com/le0aT56.png', url: 'https://discord.gg/ZyRe42SR4C' })
                 .addFields(
                     {
                         name: 'Rules',

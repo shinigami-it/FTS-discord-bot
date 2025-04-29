@@ -41,7 +41,7 @@ module.exports = {
             .setURL(`https://twitch.tv/${twitchUsername}`)
             .setImage(`https://static-cdn.jtvnw.net/previews-ttv/live_user_${twitchUsername.toLowerCase()}-400x225.jpg?timestamp=${Date.now()}`)
             .setTimestamp()
-            .setFooter({ text: 'Yuki - Est. 2023', iconURL: 'https://i.imgur.com/le0aT56.png' });
+            .setFooter({ text: 'FTS - Est. 2023', iconURL: 'https://i.imgur.com/le0aT56.png' });
 
             const button = new ButtonBuilder()
             .setLabel('Watch Stream')
@@ -84,7 +84,7 @@ module.exports = {
             .setURL(`https://twitch.tv/${twitchUsername}`)
             .setImage(`https://static-cdn.jtvnw.net/previews-ttv/live_user_${twitchUsername.toLowerCase()}-400x225.jpg`)
 	        .setTimestamp()
-            .setFooter({ text: 'Yuki - Est. 2023', iconURL: 'https://i.imgur.com/le0aT56.png' });
+            .setFooter({ text: 'FTS - Est. 2023', iconURL: 'https://i.imgur.com/le0aT56.png' });
 
             const button = new ButtonBuilder()
             .setLabel('Watch Stream')

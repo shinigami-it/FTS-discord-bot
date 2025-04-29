@@ -11,7 +11,7 @@ module.exports = {
         .setTitle(`Invite ${interaction.client.user.username}`)
         .setDescription('Thanks for being interested in our bot!')
         .setColor('#6400ff')
-        .setAuthor({ name: 'Yuki - Est. 2023', iconURL: 'https://i.imgur.com/le0aT56.png', url: 'https://discord.gg/ZyRe42SR4C' });
+        .setAuthor({ name: 'FTS - Est. 2023', iconURL: 'https://i.imgur.com/le0aT56.png', url: 'https://discord.gg/ZyRe42SR4C' });
         const invite = new ButtonBuilder()
             .setLabel('invite the bot into your server!')
             .setURL(`https://discord.com/oauth2/authorize?client_id=1164317211196928030&permissions=8&integration_type=0&scope=bot`)

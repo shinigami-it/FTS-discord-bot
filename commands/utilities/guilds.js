@@ -13,7 +13,7 @@ module.exports = {
             .setTitle('**Help**')
             .setDescription('Displays a list of all active guilds the bot is a part of.')
             .setColor('#6400ff')
-            .setAuthor({ name: 'Yuki - Est. 2023', iconURL: 'https://i.imgur.com/le0aT56.png', url: 'https://discord.gg/ZyRe42SR4C' })
+            .setAuthor({ name: 'FTS - Est. 2023', iconURL: 'https://i.imgur.com/le0aT56.png', url: 'https://discord.gg/ZyRe42SR4C' })
             .addFields(
                 { name: 'Rules', value: `[${rulesChannel.name}](https://discord.com/channels/1132332567459278878/${rulesChannelId})`, inline: true },
                 { name: 'Need more help?', value: `join our [support server](https://discord.gg/ZyRe42SR4C)`, inline: true }

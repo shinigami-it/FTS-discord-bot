@@ -60,7 +60,7 @@ module.exports = {
                 .setDescription(feedbackText)
                 .setColor(embedColor)
                 .setAuthor({ name: formattedCategory, url: 'https://discord.gg/ZyRe42SR4C' })
-                .setFooter({ text: 'Yuki - Est. 2023', iconURL: 'https://i.imgur.com/le0aT56.png' });
+                .setFooter({ text: 'FTS - Est. 2023', iconURL: 'https://i.imgur.com/le0aT56.png' });
 
             // Send the embed to the feedback channel
             await feedbackChannel.send({ embeds: [embed] });
