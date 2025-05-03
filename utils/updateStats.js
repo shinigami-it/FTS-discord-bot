@@ -6,10 +6,10 @@ let EventCountOld = 0;
 
 module.exports = {
     updateTeamMembers: async (guild) => {
-        const guildId = '1132332567459278878';
+        const guildId = "1132332567459278878";
         const ftsRole = "1287721449057947669";
         const ftsTrialRole = "1290079131807256616";
-        const channelId = '1353712107031625788';
+        const channelId = "1353712107031625788";
         try {
             if (guild.id !== guildId) return;
 
