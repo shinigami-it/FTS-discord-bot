@@ -3,8 +3,6 @@ const path = require('path');
 
 const responses = JSON.parse(fs.readFileSync(path.join(__dirname, '../utils', 'cheapResponse.json'), 'utf-8'));
 
-const responseIndexes = new Map();
-
 module.exports = {
   name: 'messageCreate',
   async execute(message) {
@@ -12,16 +10,15 @@ module.exports = {
 
     const msg = message.content.toLowerCase();
 
-    for (let i = 0; i < responses.length; i++) {
-      const entry = responses[i];
+    for (const entry of responses) {
       const triggers = Array.isArray(entry.trigger) ? entry.trigger : [entry.trigger];
 
       if (triggers.some(trigger => msg.includes(trigger.toLowerCase()))) {
-        const currentIndex = responseIndexes.get(i) || 0;
-        const reply = entry.responses[currentIndex];
-        const nextIndex = (currentIndex + 1) % entry.responses.length;
-        responseIndexes.set(i, nextIndex);
-        message.reply(reply);
+        const randomIndex = Math.floor(Math.random() * entry.responses.length);
+        const reply = entry.responses[randomIndex];
+
+        await message.react('🇮🇱');
+        await message.reply(reply);
         break;
       }
     }
