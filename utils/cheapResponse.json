@@ -2,8 +2,8 @@
     {
         "trigger": [
           "cheap",
+	  "stingy",
           "expensive",
-          "broke",
           "rich",
           "money",
           "cash",
