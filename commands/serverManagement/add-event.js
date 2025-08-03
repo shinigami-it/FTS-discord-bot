@@ -1,6 +1,7 @@
 const mysql = require('mysql2/promise');
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const { URL } = require('url');
+const { DateTime } = require('luxon');
 
 function parseMysqlUrl(urlString) {
   const url = new URL(urlString);
@@ -60,11 +61,13 @@ module.exports = {
 
     const startTimestamp = parseInt(startMatch[1]) * 1000;
     const endTimestamp = parseInt(endMatch[1]) * 1000;
-    const start = new Date(startTimestamp);
-    const end = new Date(endTimestamp);
-    const date = start.toISOString().split('T')[0];
-    const timestart = start.toTimeString().slice(0, 5);
-    const timeend = end.toTimeString().slice(0, 5);
+
+    const start = DateTime.fromMillis(startTimestamp, { zone: 'Europe/Berlin' });
+    const end = DateTime.fromMillis(endTimestamp, { zone: 'Europe/Berlin' });
+
+    const date = start.toISODate();
+    const timestart = start.toFormat('HH:mm');
+    const timeend = end.toFormat('HH:mm');
 
     const config = parseMysqlUrl(process.env.MYSQL_URL_WEBSITE);
     const conn = await mysql.createConnection(config);
@@ -76,8 +79,8 @@ module.exports = {
 
     await interaction.guild.scheduledEvents.create({
       name: title,
-      scheduledStartTime: start,
-      scheduledEndTime: end,
+      scheduledStartTime: start.toJSDate(),
+      scheduledEndTime: end.toJSDate(),
       privacyLevel: 2,
       entityType: 2,
       entityMetadata: { location: location.id },
