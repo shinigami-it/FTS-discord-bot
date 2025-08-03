@@ -1,6 +1,9 @@
 [
   {
-    "trigger": ["egg"],
+    "trigger": [
+      "egg",
+      "🥚"
+    ],
     "responses": [
       "eggtastic!",
       "eggy!",
