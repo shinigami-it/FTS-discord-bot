@@ -28,7 +28,7 @@ const Warning = sequelize.define('Warning', {
         defaultValue: true,
     }
 }, {
-    tableName: 'warnings-test',
+    tableName: 'warnings',
     timestamps: false,
 });
 
