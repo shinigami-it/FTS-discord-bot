@@ -25,7 +25,7 @@ const Warning = sequelize.define('Warning', {
     },
     active: {
         type: DataTypes.TINYINT,
-        defaultValue: 1, // active by default
+        defaultValue: 1,
         allowNull: false
     }
 }, {
