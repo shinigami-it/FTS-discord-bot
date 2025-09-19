@@ -1,6 +1,13 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require("discord.js");
 const Warning = require("../../models/warning");
 
+// --- CONFIG CONSTANTS ---
+const FTS_ROLE_ID = "1287721449057947669";
+const FTS_TRIAL_ROLE_ID = "1290079131807256616";
+const MODERATOR_ROLE_ID = "1167925164374249543";
+const MOD_CHANNEL_ID = "1150146916194193640";
+// ------------------------
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("warn")
@@ -42,7 +49,7 @@ module.exports = {
                     option.setName("inactive")
                         .setDescription("Show only deactivated warnings")
                         .setRequired(false))),
-
+    
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();
 
@@ -50,12 +57,45 @@ module.exports = {
             const target = interaction.options.getUser("user");
             const reason = interaction.options.getString("reason");
             const moderator = interaction.user;
+            const member = await interaction.guild.members.fetch(target.id);
 
             await Warning.create({
                 userId: target.id,
                 moderatorId: moderator.id,
                 reason: reason
             });
+
+            // Fetch active warnings for FTS role logic
+            const activeWarnings = await Warning.findAll({
+                where: { userId: target.id, active: true },
+                order: [['id', 'DESC']]
+            });
+
+            // Handle FTS roles if needed
+            const hasFTS = member.roles.cache.has(FTS_ROLE_ID);
+            const hasTrial = member.roles.cache.has(FTS_TRIAL_ROLE_ID);
+
+            if (activeWarnings.length >= 3) {
+                if (hasFTS) {
+                    await member.roles.remove(FTS_ROLE_ID);
+                    await member.roles.add(FTS_TRIAL_ROLE_ID);
+                } else if (hasTrial) {
+                    const modChannel = interaction.guild.channels.cache.get(MOD_CHANNEL_ID);
+                    const modRole = interaction.guild.roles.cache.get(MODERATOR_ROLE_ID);
+                    if (modChannel) {
+                        const modEmbed = new EmbedBuilder()
+                            .setTitle("⚠ User reached 3 warnings while in Trial role")
+                            .setColor("Orange")
+                            .addFields(
+                                { name: "User", value: `<@${target.id}>`, inline: true },
+                                { name: "Moderator", value: `<@${moderator.id}>`, inline: true },
+                                { name: "Total Active Warnings", value: `${activeWarnings.length}` }
+                            )
+                            .setTimestamp();
+                        await modChannel.send({ content: `${modRole}`, embeds: [modEmbed] });
+                    }
+                }
+            }
 
             const embed = new EmbedBuilder()
                 .setTitle(`Warning Added`)
