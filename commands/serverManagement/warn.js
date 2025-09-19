@@ -75,8 +75,11 @@ module.exports = {
             .setFooter({ text: `Requested by ${moderator.tag}` });
 
         for (const warn of warnings) {
+            const timestamp = new Date(warn.timestamp);
+            timestamp.setHours(timestamp.getHours() + 2); // add 2 hours
+                
             embed.addFields({
-                name: `⏱ ${warn.timestamp.toLocaleString()} | Warn ID (${warn.id}) - By <@${warn.moderatorId}>`,
+                name: `⏱ ${timestamp.toLocaleString()} | Warn ID (${warn.id}) - By <@${warn.moderatorId}>`,
                 value: warn.reason
             });
         }
