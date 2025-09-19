@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require("discord.js");
-const Warning = require("../models/warning");
+const Warning = require("../models/Warning");
 
 const FTS_ROLE = "1287721449057947669";
 const FTS_TRIAL_ROLE = "1290079131807256616";
