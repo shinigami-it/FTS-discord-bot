@@ -24,8 +24,9 @@ const Warning = sequelize.define('Warning', {
         defaultValue: DataTypes.NOW,
     },
     active: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true, // active by default
+        type: DataTypes.TINYINT,
+        defaultValue: 1, // active by default
+        allowNull: false
     }
 }, {
     tableName: 'warnings',
