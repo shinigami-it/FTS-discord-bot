@@ -29,6 +29,16 @@ module.exports = {
                         .addChannelTypes(ChannelType.GuildText)
                 )
         )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('feedback-channel')
+                .setDescription('Set the feedback channel for this guild')
+                .addChannelOption(option =>
+                    option.setName('channel')
+                        .setDescription('Channel to set as the feedback channel')
+                        .addChannelTypes(ChannelType.GuildText)
+                )
+        )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .setDMPermission(false),
 
@@ -70,6 +80,13 @@ module.exports = {
                 guildData.rulesId = channel ? channel.id : null;
                 await guildData.save();
                 return interaction.editReply({ content: `Rules channel set to ${channel}`, ephemeral: true });
+            }
+
+            if (subcommand === 'feedback-channel') {
+                const channel = options.getChannel('channel');
+                guildData.feedbackChannelId = channel ? channel.id : null;
+                await guildData.save();
+                return interaction.editReply({ content: `Feedback channel set to ${channel}`, ephemeral: true });
             }
 
         } catch (error) {
