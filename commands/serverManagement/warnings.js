@@ -43,7 +43,7 @@ module.exports = {
             const unixTimestamp = Math.floor(new Date(warn.timestamp).getTime() / 1000);
             embed.addFields({
                 name: `⏱ <t:${unixTimestamp}:F>`,
-                value: `Warn ID (${warn.id}) - By ${warn.moderatorId}\nUser: <@${warn.userId}>\n\`\`\`${warn.reason}\`\`\``
+                value: `Warn ID (${warn.id}) - By <@${warn.moderatorId}>\nUser: <@${warn.userId}>\n\`\`\`${warn.reason}\`\`\``
             });
         }
 
