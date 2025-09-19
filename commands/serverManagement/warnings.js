@@ -4,31 +4,19 @@ const Warning = require("../../models/warning");
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("warnings")
-        .setDescription("Show warnings")
+        .setDescription("Show the last 20 warnings (optionally for a specific user)")
         .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers)
         .addUserOption(option =>
             option.setName("user")
-                .setDescription("The user to check warnings for")
-                .setRequired(false))
-        .addBooleanOption(option =>
-            option.setName("all")
-                .setDescription("Show the last 20 warnings from all users")
+                .setDescription("Optional: Show warnings for a specific user")
                 .setRequired(false)),
 
     async execute(interaction) {
         const target = interaction.options.getUser("user");
-        const showAll = interaction.options.getBoolean("all");
 
         let warnings;
 
-        if (showAll) {
-            // Fetch last 20 warnings from all users
-            warnings = await Warning.findAll({
-                order: [['id', 'DESC']],
-                limit: 20
-            });
-            if (!warnings.length) return interaction.reply({ content: "No warnings found.", ephemeral: true });
-        } else if (target) {
+        if (target) {
             // Fetch last 20 active warnings for the specific user
             warnings = await Warning.findAll({
                 where: { userId: target.id, active: true },
@@ -37,20 +25,25 @@ module.exports = {
             });
             if (!warnings.length) return interaction.reply({ content: `${target.tag} has no active warnings.`, ephemeral: true });
         } else {
-            return interaction.reply({ content: "Please specify a user or set all to true.", ephemeral: true });
+            // Fetch last 20 warnings from all users
+            warnings = await Warning.findAll({
+                order: [['id', 'DESC']],
+                limit: 20
+            });
+            if (!warnings.length) return interaction.reply({ content: "No warnings found.", ephemeral: true });
         }
 
         // Create embed
         const embed = new EmbedBuilder()
-            .setTitle(showAll ? `Last 20 warnings from all users` : `Warnings for ${target.tag} (${warnings.length})`)
-            .setColor("Red")
-            .setFooter({ text: `Requested by ${interaction.user.tag}` });
+            .setTitle(target ? `Warnings for ${target.tag} (${warnings.length})` : "Last 20 warnings from all users")
+            .setColor("#ff0000")
+            .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() });
 
         for (const warn of warnings) {
             const unixTimestamp = Math.floor(new Date(warn.timestamp).getTime() / 1000);
             embed.addFields({
-                name: `⏱ <t:${unixTimestamp}:F> | Warn ID (${warn.id})`,
-                value: `${warn.reason}\nBy <@${warn.moderatorId}>${!showAll ? "" : ` | User: <@${warn.userId}>`}`
+                name: `⏱ <t:${unixTimestamp}:F>`,
+                value: `Warn ID (${warn.id}) - By ${Warning.moderatorId}\nUser: <@${Warning.userId}>\n\`\`\`${warn.reason}\`\`\``
             });
         }
 
