@@ -14,14 +14,15 @@ module.exports = {
     async execute(interaction) {
         const target = interaction.options.getUser("user");
 
-        // Fetch all warnings for the user
+        // Fetch last 20 active warnings for the user
         const warnings = await Warning.findAll({
-            where: { userId: target.id },
-            order: [['id', 'DESC']]
+            where: { userId: target.id, active: true },
+            order: [['id', 'DESC']],
+            limit: 20
         });
 
         if (!warnings.length) {
-            return interaction.reply({ content: `${target.tag} has no warnings.`, ephemeral: true });
+            return interaction.reply({ content: `${target.tag} has no active warnings.`, ephemeral: true });
         }
 
         // Create embed
@@ -31,7 +32,6 @@ module.exports = {
             .setFooter({ text: `Requested by ${interaction.user.tag}` });
 
         for (const warn of warnings) {
-            // Convert timestamp to Discord Snowflake format (seconds)
             const unixTimestamp = Math.floor(new Date(warn.timestamp).getTime() / 1000);
 
             embed.addFields({
@@ -40,6 +40,7 @@ module.exports = {
             });
         }
 
-        await interaction.reply({ embeds: [embed] });
+        // Ephemeral = only visible to the command user
+        await interaction.reply({ embeds: [embed], ephemeral: true });
     }
 };

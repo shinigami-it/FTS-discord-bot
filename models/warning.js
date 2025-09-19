@@ -22,6 +22,10 @@ const Warning = sequelize.define('Warning', {
     timestamp: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
+    },
+    active: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true, // active by default
     }
 }, {
     tableName: 'warnings',
