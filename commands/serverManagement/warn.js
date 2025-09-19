@@ -1,122 +1,106 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require("discord.js");
 const Warning = require("../../models/warning");
 
-const FTS_ROLE = "1287721449057947669";
-const FTS_TRIAL_ROLE = "1290079131807256616";
-const MODERATOR_ROLE_ID = "1167925164374249543";
-const MOD_CHANNEL_ID = "1150146916194193640";
-
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("warn")
-        .setDescription("Manage warnings")
+        .setDescription("Manage user warnings")
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
         .addSubcommand(sub =>
             sub.setName("add")
-                .setDescription("Warn a user")
-                .addUserOption(option => option.setName("user").setDescription("User to warn").setRequired(true))
-                .addStringOption(option => option.setName("reason").setDescription("Reason for warning").setRequired(true))
-        )
+                .setDescription("Add a warning to a user")
+                .addUserOption(option =>
+                    option.setName("user")
+                        .setDescription("The user to warn")
+                        .setRequired(true))
+                .addStringOption(option =>
+                    option.setName("reason")
+                        .setDescription("Reason for the warning")
+                        .setRequired(true)))
         .addSubcommand(sub =>
-            sub.setName("remove")
-                .setDescription("Deactivate a warning")
-                .addIntegerOption(option => option.setName("warnid").setDescription("ID of warning").setRequired(true))
-        )
+            sub.setName("deactivate")
+                .setDescription("Deactivate a specific warning")
+                .addIntegerOption(option =>
+                    option.setName("warnid")
+                        .setDescription("ID of the warning to deactivate")
+                        .setRequired(true)))
         .addSubcommand(sub =>
             sub.setName("activate")
-                .setDescription("Reactivate a warning")
-                .addIntegerOption(option => option.setName("warnid").setDescription("ID of warning").setRequired(true))
-        )
+                .setDescription("Activate a specific warning")
+                .addIntegerOption(option =>
+                    option.setName("warnid")
+                        .setDescription("ID of the warning to activate")
+                        .setRequired(true)))
         .addSubcommand(sub =>
             sub.setName("list")
-                .setDescription("Show last 20 active warnings (optionally for a user)")
-                .addUserOption(option => option.setName("user").setDescription("Optional: specific user"))
-        )
-        .addSubcommand(sub =>
-            sub.setName("list_inactive")
-                .setDescription("Show last 20 inactive warnings (optionally for a user)")
-                .addUserOption(option => option.setName("user").setDescription("Optional: specific user"))
-        ),
+                .setDescription("List warnings")
+                .addUserOption(option =>
+                    option.setName("user")
+                        .setDescription("Optional: Show warnings for a specific user")
+                        .setRequired(false))
+                .addBooleanOption(option =>
+                    option.setName("inactive")
+                        .setDescription("Show only deactivated warnings")
+                        .setRequired(false))),
 
     async execute(interaction) {
-        const sub = interaction.options.getSubcommand();
+        const subcommand = interaction.options.getSubcommand();
 
-        if (sub === "add") {
+        if (subcommand === "add") {
             const target = interaction.options.getUser("user");
             const reason = interaction.options.getString("reason");
             const moderator = interaction.user;
-            const member = await interaction.guild.members.fetch(target.id);
 
-            await Warning.create({ userId: target.id, moderatorId: moderator.id, reason });
-
-            const warnings = await Warning.findAll({ where: { userId: target.id }, order: [['id', 'DESC']] });
-
-            const hasFTS = member.roles.cache.has(FTS_ROLE);
-            const hasTrial = member.roles.cache.has(FTS_TRIAL_ROLE);
-
-            if (warnings.length >= 3) {
-                if (hasFTS) {
-                    await member.roles.remove(FTS_ROLE);
-                    await member.roles.add(FTS_TRIAL_ROLE);
-                } else if (hasTrial) {
-                    const modChannel = interaction.guild.channels.cache.get(MOD_CHANNEL_ID);
-                    const modRole = interaction.guild.roles.cache.get(MODERATOR_ROLE_ID);
-                    if (modChannel) {
-                        const modEmbed = new EmbedBuilder()
-                            .setTitle(`⚠ User reached 3 warnings while in Trial role`)
-                            .setColor("Orange")
-                            .addFields(
-                                { name: "User", value: `<@${target.id}>`, inline: true },
-                                { name: "Moderator", value: `<@${moderator.id}>`, inline: true },
-                                { name: "Reason", value: reason },
-                                { name: "Total Warnings", value: `${warnings.length}` }
-                            )
-                            .setTimestamp();
-                        await modChannel.send({ content: `${modRole}`, embeds: [modEmbed] });
-                    }
-                }
-            }
+            await Warning.create({
+                userId: target.id,
+                moderatorId: moderator.id,
+                reason: reason
+            });
 
             const embed = new EmbedBuilder()
-                .setTitle(`${warnings.length} Warnings (${warnings.length}/3)`)
-                .setColor("Red")
-                .setFooter({ text: `Requested by ${moderator.tag}` });
-
-            for (const warn of warnings) {
-                const timestamp = new Date(warn.timestamp);
-                timestamp.setHours(timestamp.getHours() + 2);
-                embed.addFields({
-                    name: `⏱ ${timestamp.toLocaleString()} | Warn ID (${warn.id}) - By <@${warn.moderatorId}>`,
-                    value: warn.reason
-                });
-            }
+                .setTitle(`Warning Added`)
+                .setColor("Green")
+                .addFields(
+                    { name: "User", value: `<@${target.id}>`, inline: true },
+                    { name: "Moderator", value: `<@${moderator.id}>`, inline: true },
+                    { name: "Reason", value: reason }
+                )
+                .setTimestamp();
 
             await interaction.reply({ embeds: [embed] });
 
-        } else if (sub === "remove" || sub === "activate") {
+        } else if (subcommand === "deactivate" || subcommand === "activate") {
             const warnId = interaction.options.getInteger("warnid");
             const warn = await Warning.findByPk(warnId);
             if (!warn) return interaction.reply({ content: `Warning ID ${warnId} not found.`, ephemeral: true });
 
-            if (sub === "remove") {
-                if (!warn.active) return interaction.reply({ content: `Warning ID ${warnId} is already deactivated.`, ephemeral: true });
-                await Warning.update({ active: false }, { where: { id: warnId } });
-                await interaction.reply({ content: `Warning ID ${warnId} deactivated.`, ephemeral: true });
-            } else {
-                if (warn.active) return interaction.reply({ content: `Warning ID ${warnId} is already active.`, ephemeral: true });
-                await Warning.update({ active: true }, { where: { id: warnId } });
-                await interaction.reply({ content: `Warning ID ${warnId} reactivated.`, ephemeral: true });
-            }
+            const newActive = subcommand === "activate";
+            if (warn.active === newActive) return interaction.reply({ content: `Warning ID ${warnId} is already ${newActive ? "active" : "deactivated"}.`, ephemeral: true });
 
-        } else if (sub === "list" || sub === "list_inactive") {
+            await Warning.update({ active: newActive }, { where: { id: warnId } });
+
+            const embed = new EmbedBuilder()
+                .setTitle(`Warning ${newActive ? "Activated" : "Deactivated"}`)
+                .setColor(newActive ? "Green" : "Red")
+                .addFields(
+                    { name: "Warn ID", value: `${warn.id}`, inline: true },
+                    { name: "User", value: `<@${warn.userId}>`, inline: true },
+                    { name: newActive ? "Activated by" : "Deactivated by", value: `<@${interaction.user.id}>`, inline: true },
+                    { name: "Reason", value: warn.reason }
+                )
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [embed] });
+
+        } else if (subcommand === "list") {
             const target = interaction.options.getUser("user");
-            const activeOnly = sub === "list";
+            const inactive = interaction.options.getBoolean("inactive") ?? false;
 
-            const whereClause = { active: activeOnly ? 1 : 0 };
-            if (target) whereClause.userId = target.id;
+            let where = { active: !inactive };
+            if (target) where.userId = target.id;
 
             const warnings = await Warning.findAll({
-                where: whereClause,
+                where,
                 order: [['id', 'DESC']],
                 limit: 20
             });
@@ -124,7 +108,7 @@ module.exports = {
             if (!warnings.length) return interaction.reply({ content: "No warnings found.", ephemeral: true });
 
             const embed = new EmbedBuilder()
-                .setTitle(target ? `${activeOnly ? 'Active' : 'Inactive'} warnings for ${target.tag}` : `Last 20 ${activeOnly ? 'active' : 'inactive'} warnings`)
+                .setTitle(target ? `Warnings for ${target.tag} (${warnings.length})` : `Last 20 ${inactive ? "inactive" : "active"} warnings`)
                 .setColor("#ff0000")
                 .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() });
 
