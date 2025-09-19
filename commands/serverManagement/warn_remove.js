@@ -5,7 +5,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName("warn_remove")
         .setDescription("Deactivate a specific warning from a user")
-        .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers)
+        .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
         .addIntegerOption(option =>
             option.setName("warnid")
                 .setDescription("ID of the warning to deactivate")

@@ -10,7 +10,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName("warn")
         .setDescription("Warn a user")
-        .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers)
+        .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
         .addUserOption(option =>
             option.setName("user")
                 .setDescription("The user to warn")

@@ -5,7 +5,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName("warnings")
         .setDescription("Show the last 20 warnings (optionally for a specific user)")
-        .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers)
+        .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
         .addUserOption(option =>
             option.setName("user")
                 .setDescription("Optional: Show warnings for a specific user")
@@ -19,7 +19,7 @@ module.exports = {
         if (target) {
             // Fetch last 20 active warnings for the specific user
             warnings = await Warning.findAll({
-                where: { userId: target.id, active: 1 },
+                where: { userId: target.id, active: true },
                 order: [['id', 'DESC']],
                 limit: 20
             });
