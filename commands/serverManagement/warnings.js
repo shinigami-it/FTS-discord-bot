@@ -19,7 +19,7 @@ module.exports = {
         if (target) {
             // Fetch last 20 active warnings for the specific user
             warnings = await Warning.findAll({
-                where: { userId: target.id, active: true },
+                where: { active: true },
                 order: [['id', 'DESC']],
                 limit: 20
             });
