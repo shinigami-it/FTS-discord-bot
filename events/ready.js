@@ -1,5 +1,5 @@
 const { ActivityType } = require('discord.js');
-const GuildModel = require('../models/guild');
+const Guild = require('../models/guild');
 const { updateEventDrivers, updateTeamMembers } = require('../utils/updateStats');
 const chalk = require('chalk');
 require('dotenv').config();
@@ -37,11 +37,10 @@ module.exports = {
             try {
                 await guild.members.fetch();
                 const totalMembers = guild.members.cache.size;
-            
+
                 if (memberCountsOld[guild.id] !== totalMembers) {
                     memberCountsOld[guild.id] = totalMembers;
-                
-                    const guildData = await GuildModel.findOne({ where: { id: guild.id } });
+                    const guildData = await Guild.findOne({ where: { id: guild.id } });
                     if (guildData && guildData.memberCountChannelId) {
                         const memberCountChannel = await guild.channels.fetch(guildData.memberCountChannelId);
                         if (memberCountChannel) {
