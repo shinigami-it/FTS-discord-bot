@@ -14,7 +14,7 @@ module.exports = {
             type: ActivityType.Streaming,
             url: 'https://twitch.tv/dashund007'
         });
-Guild.findOne({ where: { id: '1132332567459278878' } }).then(console.log).catch(console.error);
+
         let memberCountsOld = {};
 
         client.on('guildMemberAdd', async (member) => {

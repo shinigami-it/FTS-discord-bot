@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../utils/database');
-
+console.log(Guild); // sollte ein Sequelize Model zeigen
+console.log(typeof Guild.findOne);
 const Guild = sequelize.define('Guild', {
     id: {
         type: DataTypes.STRING,
