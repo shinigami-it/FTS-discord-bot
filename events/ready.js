@@ -3,7 +3,8 @@ const Guild = require('../models/guild');
 const { updateEventDrivers, updateTeamMembers } = require('../utils/updateStats');
 const chalk = require('chalk');
 require('dotenv').config();
-
+console.log(Guild); // sollte ein Sequelize Model zeigen
+console.log(typeof Guild.findOne);
 module.exports = {
     name: 'ready',
     once: true,
