@@ -42,7 +42,7 @@ module.exports = {
                     memberCountsOld[guild.id] = totalMembers;
                 
                     // Sequelize Query
-                    const guildData = await GuildModel.findOne({ where: { id: guild.id } });
+                    const guildData = await Guild.findOne({ where: { id: guild.id } });
                     if (guildData && guildData.memberCountChannelId) {
                         const memberCountChannel = await guild.channels.fetch(guildData.memberCountChannelId);
                         if (memberCountChannel) {
