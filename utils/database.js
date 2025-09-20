@@ -3,7 +3,7 @@ const { Sequelize } = require('sequelize');
 dotenv.config();
 
 const sequelize = new Sequelize(process.env.MYSQL_URL, {
-    host: '192.168.1.209',
+    host: '10.1.62.2',
     port: 3306,
     dialect: 'mysql',
     logging: false,

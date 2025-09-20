@@ -39,10 +39,8 @@ module.exports = {
                 const totalMembers = guild.members.cache.size;
 
                 if (memberCountsOld[guild.id] !== totalMembers) {
-                    console.log(Guild)
                     memberCountsOld[guild.id] = totalMembers;
                     const guildData = await Guild.findOne({ where: { id: guild.id } });
-                    console.log(Guild)
                     if (guildData && guildData.memberCountChannelId) {
                         const memberCountChannel = await guild.channels.fetch(guildData.memberCountChannelId);
                         if (memberCountChannel) {
