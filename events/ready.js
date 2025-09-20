@@ -1,5 +1,5 @@
 const { ActivityType } = require('discord.js');
-const Guild = require('../models/guild');
+const GuildModel = require('../models/guild');
 const { updateEventDrivers, updateTeamMembers } = require('../utils/updateStats');
 const chalk = require('chalk');
 require('dotenv').config();
@@ -41,8 +41,7 @@ module.exports = {
                 if (memberCountsOld[guild.id] !== totalMembers) {
                     memberCountsOld[guild.id] = totalMembers;
                 
-                    // Sequelize Query
-                    const guildData = await Guild.findOne({ where: { id: guild.id } });
+                    const guildData = await GuildModel.findOne({ where: { id: guild.id } });
                     if (guildData && guildData.memberCountChannelId) {
                         const memberCountChannel = await guild.channels.fetch(guildData.memberCountChannelId);
                         if (memberCountChannel) {
