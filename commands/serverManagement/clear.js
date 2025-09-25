@@ -39,24 +39,27 @@ module.exports = {
 			});
 		}
 
-		await interaction.deferReply({ ephemeral: true });
+		// Public initial message instead of ephemeral
+		const statusMessage = await channel.send("⏳ Deleting messages...");
 
 		const amount = interaction.options.getInteger("number_of_messages");
 		const user = interaction.options.getUser("filter_by_user");
 		const role = interaction.options.getRole("filter_by_role");
 		const botsOnly = interaction.options.getBoolean("filter_by_bots");
 
-		const statusMessage = await channel.send("⏳ Deleting messages...");
-
+		// Fetch messages
 		let messages = await channel.messages.fetch({ limit: amount });
 
+		// Apply filters
 		if (user) messages = messages.filter((m) => m.author.id === user.id);
 		if (role) messages = messages.filter((m) => m.member && m.member.roles.cache.has(role.id));
 		if (botsOnly) messages = messages.filter((m) => m.author.bot);
 
+		// Bulk delete
 		const deleted = await channel.bulkDelete(messages, true);
 		const deletedCount = deleted.size;
 
+		// Edit the status message with the result
 		let text;
 		if (deletedCount === 0) text = "⚠️ No messages could be deleted.";
 		else if (deletedCount === 1) text = "🧹 1 message has been deleted.";
@@ -64,8 +67,10 @@ module.exports = {
 
 		await statusMessage.edit(text);
 
-		setTimeout(() => statusMessage.delete().catch(() => {}), 2000);
+		// Optional: Delete the status message after a few seconds
+		setTimeout(() => statusMessage.delete().catch(() => {}), 5000);
 
-		await interaction.editReply({ content: "✅ Finished!", ephemeral: true });
+		// Respond to the slash command so it doesn't show "interaction failed"
+		await interaction.reply({ content: "✅ Done clearing messages.", ephemeral: true });
 	},
 };
