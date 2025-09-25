@@ -39,17 +39,20 @@ module.exports = {
 			});
 		}
 
-		// Send public status message
-		const statusMessage = await channel.send("Deleting messages...");
+		// Acknowledge the interaction immediately with a temporary status
+		await interaction.reply({ content: "⏳ Deleting messages...", ephemeral: false });
 
 		const amount = interaction.options.getInteger("number_of_messages");
 		const user = interaction.options.getUser("filter_by_user");
 		const role = interaction.options.getRole("filter_by_role");
 		const botsOnly = interaction.options.getBoolean("filter_by_bots");
 
-		// Fetch messages (+1 to avoid deleting the status message)
+		// Fetch messages (+0 because we are editing the interaction reply itself)
 		let messages = await channel.messages.fetch({ limit: amount + 1 });
-		messages = messages.filter(m => m.id !== statusMessage.id);
+
+		// Filter out the bot's own reply (the slash command reply)
+		const replyMessage = await interaction.fetchReply();
+		messages = messages.filter(m => m.id !== replyMessage.id);
 
 		// Apply filters
 		if (user) messages = messages.filter(m => m.author.id === user.id);
@@ -60,22 +63,16 @@ module.exports = {
 		const deleted = await channel.bulkDelete(messages, true);
 		const deletedCount = deleted.size;
 
-		// Prepare text with code blocks
+		// Prepare the final text with code blocks
 		let text;
-		if (deletedCount === 0) text = "```No messages could be deleted.```";
-		else if (deletedCount === 1) text = "```1 message has been deleted.```";
-		else text = `\`\`\`${deletedCount} messages have been deleted.\`\`\``;
+		if (deletedCount === 0) text = "```⚠️ No messages could be deleted.```";
+		else if (deletedCount === 1) text = "```🧹 1 message has been deleted.```";
+		else text = `\`\`\`🧹 ${deletedCount} messages have been deleted.\`\`\``;
 
-		// Edit the same status message
-		try {
-			await statusMessage.edit(text);
-		} catch (err) {
-			console.error("Failed to edit status message:", err);
-		}
+		// Edit the original slash command reply
+		await interaction.editReply(text);
 
-		// Optional: Delete the status message after 5 seconds
-		setTimeout(() => statusMessage.delete().catch(() => {}), 5000);
-
-		// No ephemeral reply needed
+		// Optional: delete the reply after a few seconds
+		setTimeout(() => replyMessage.delete().catch(() => {}), 5000);
 	},
 };
