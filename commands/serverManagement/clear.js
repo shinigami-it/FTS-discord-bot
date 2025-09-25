@@ -39,18 +39,15 @@ module.exports = {
 			});
 		}
 
-		// Defer the interaction publicly (prevents "The application did not respond")
-		await interaction.deferReply({ ephemeral: false });
-
-		// Send the public status message
-		const statusMessage = await channel.send("⏳ Deleting messages...");
+		// Send public status message
+		const statusMessage = await channel.send("Deleting messages...");
 
 		const amount = interaction.options.getInteger("number_of_messages");
 		const user = interaction.options.getUser("filter_by_user");
 		const role = interaction.options.getRole("filter_by_role");
 		const botsOnly = interaction.options.getBoolean("filter_by_bots");
 
-		// Fetch messages (+1 to avoid deleting the status message itself)
+		// Fetch messages (+1 to avoid deleting the status message)
 		let messages = await channel.messages.fetch({ limit: amount + 1 });
 		messages = messages.filter(m => m.id !== statusMessage.id);
 
@@ -65,9 +62,9 @@ module.exports = {
 
 		// Prepare text with code blocks
 		let text;
-		if (deletedCount === 0) text = "```⚠️ No messages could be deleted.```";
-		else if (deletedCount === 1) text = "```🧹 1 message has been deleted.```";
-		else text = `\`\`\`🧹 ${deletedCount} messages have been deleted.\`\`\``;
+		if (deletedCount === 0) text = "```No messages could be deleted.```";
+		else if (deletedCount === 1) text = "```1 message has been deleted.```";
+		else text = `\`\`\`${deletedCount} messages have been deleted.\`\`\``;
 
 		// Edit the same status message
 		try {
@@ -76,10 +73,9 @@ module.exports = {
 			console.error("Failed to edit status message:", err);
 		}
 
-		// Optional: delete the status message after 5 seconds
+		// Optional: Delete the status message after 5 seconds
 		setTimeout(() => statusMessage.delete().catch(() => {}), 5000);
 
-		// Edit the original deferred reply to acknowledge interaction
-		await interaction.editReply({ content: "✅ Done clearing messages." });
+		// No ephemeral reply needed
 	},
 };
