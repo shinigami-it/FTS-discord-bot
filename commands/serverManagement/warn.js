@@ -52,6 +52,7 @@ module.exports = {
     
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();
+        const guildId = interaction.guild.id;
 
         if (subcommand === "add") {
             const target = interaction.options.getUser("user");
@@ -60,6 +61,7 @@ module.exports = {
             const member = await interaction.guild.members.fetch(target.id);
 
             await Warning.create({
+                guildId,
                 userId: target.id,
                 moderatorId: moderator.id,
                 reason: reason
@@ -67,7 +69,7 @@ module.exports = {
 
             // Fetch active warnings for FTS role logic
             const activeWarnings = await Warning.findAll({
-                where: { userId: target.id, active: true },
+                where: { guildId, userId: target.id, active: true },
                 order: [['id', 'DESC']]
             });
 
@@ -111,13 +113,15 @@ module.exports = {
 
         } else if (subcommand === "deactivate" || subcommand === "activate") {
             const warnId = interaction.options.getInteger("warnid");
-            const warn = await Warning.findByPk(warnId);
-            if (!warn) return interaction.reply({ content: `Warning ID ${warnId} not found.`, ephemeral: true });
+            const warn = await Warning.findOne({ where: { id: warnId, guildId } });
+            if (!warn) return interaction.reply({ content: `Warning ID ${warnId} not found in this server.`, ephemeral: true });
 
             const newActive = subcommand === "activate";
-            if (warn.active === newActive) return interaction.reply({ content: `Warning ID ${warnId} is already ${newActive ? "active" : "deactivated"}.`, ephemeral: true });
+            if (warn.active === newActive) {
+                return interaction.reply({ content: `Warning ID ${warnId} is already ${newActive ? "active" : "deactivated"}.`, ephemeral: true });
+            }
 
-            await Warning.update({ active: newActive }, { where: { id: warnId } });
+            await Warning.update({ active: newActive }, { where: { id: warnId, guildId } });
 
             const embed = new EmbedBuilder()
                 .setTitle(`Warning ${newActive ? "Activated" : "Deactivated"}`)
@@ -136,7 +140,7 @@ module.exports = {
             const target = interaction.options.getUser("user");
             const inactive = interaction.options.getBoolean("inactive") ?? false;
 
-            let where = { active: !inactive };
+            let where = { guildId, active: !inactive };
             if (target) where.userId = target.id;
 
             const warnings = await Warning.findAll({
@@ -145,7 +149,9 @@ module.exports = {
                 limit: 20
             });
 
-            if (!warnings.length) return interaction.reply({ content: "No warnings found.", ephemeral: true });
+            if (!warnings.length) {
+                return interaction.reply({ content: "No warnings found.", ephemeral: true });
+            }
 
             const embed = new EmbedBuilder()
                 .setTitle(target ? `Warnings for ${target.tag} (${warnings.length})` : `Last 20 ${inactive ? "inactive" : "active"} warnings`)
