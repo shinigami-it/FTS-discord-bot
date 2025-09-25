@@ -47,8 +47,9 @@ module.exports = {
 		const role = interaction.options.getRole("filter_by_role");
 		const botsOnly = interaction.options.getBoolean("filter_by_bots");
 
-		// Fetch messages
-		let messages = await channel.messages.fetch({ limit: amount });
+		// Fetch messages (+1 to exclude the status message itself)
+		let messages = await channel.messages.fetch({ limit: amount + 1 });
+		messages = messages.filter(m => m.id !== statusMessage.id);
 
 		// Apply filters
 		if (user) messages = messages.filter((m) => m.author.id === user.id);
@@ -65,12 +66,16 @@ module.exports = {
 		else if (deletedCount === 1) text = "🧹 1 message has been deleted.";
 		else text = `🧹 ${deletedCount} messages have been deleted.`;
 
-		await statusMessage.edit(text);
+		try {
+			await statusMessage.edit(text);
+		} catch (err) {
+			console.error("Failed to edit status message:", err);
+		}
 
 		// Optional: Delete the status message after a few seconds
 		setTimeout(() => statusMessage.delete().catch(() => {}), 5000);
 
-		// Respond to the slash command so it doesn't show "interaction failed"
+		// Respond to the slash command to prevent "interaction failed"
 		await interaction.reply({ content: "✅ Done clearing messages.", ephemeral: true });
 	},
 };
