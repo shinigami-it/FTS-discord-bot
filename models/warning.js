@@ -1,4 +1,4 @@
-const { DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize'); 
 const sequelize = require('../utils/database');
 
 const Warning = sequelize.define('Warning', {
@@ -6,6 +6,10 @@ const Warning = sequelize.define('Warning', {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
+    },
+    guildId: {
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     userId: {
         type: DataTypes.STRING,
@@ -19,14 +23,14 @@ const Warning = sequelize.define('Warning', {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    active: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+    },
     timestamp: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
     },
-    active: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-    }
 }, {
     tableName: 'warnings',
     timestamps: false,
