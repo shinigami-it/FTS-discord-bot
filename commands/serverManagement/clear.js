@@ -23,14 +23,13 @@ module.exports = {
 				.setName("filter_by_role")
 				.setDescription("Delete messages from members with a specific role.")
 		)
-		.addUserOption((option) =>
+		.addBooleanOption((option) =>
 			option
 				.setName("filter_by_bots")
 				.setDescription("Delete messages sent by bots.")
 		),
 
 	async execute(interaction) {
-		const subcommand = interaction.options.getSubcommand();
 		const channel = interaction.channel;
 
 		if (!channel.isTextBased()) {
@@ -42,55 +41,30 @@ module.exports = {
 
 		await interaction.deferReply({ ephemeral: true });
 
-		// Step 1: Send status message
+		const amount = interaction.options.getInteger("number_of_messages");
+		const user = interaction.options.getUser("filter_by_user");
+		const role = interaction.options.getRole("filter_by_role");
+		const botsOnly = interaction.options.getBoolean("filter_by_bots");
+
 		const statusMessage = await channel.send("⏳ Deleting messages...");
 
-		let deletedCount = 0;
+		let messages = await channel.messages.fetch({ limit: amount });
 
-		if (subcommand === "number_of_messages") {
-			const amount = interaction.options.getInteger("amount");
-			const deleted = await channel.bulkDelete(amount, true);
-			deletedCount = deleted.size;
-		} else if (subcommand === "filter_by_user") {
-			const user = interaction.options.getUser("user");
-			const amount = interaction.options.getInteger("amount");
-			const messages = await channel.messages.fetch({ limit: amount });
-			const filtered = messages.filter((m) => m.author.id === user.id);
-			const deleted = await channel.bulkDelete(filtered, true);
-			deletedCount = deleted.size;
-		} else if (subcommand === "filter_by_role") {
-			const role = interaction.options.getRole("role");
-			const amount = interaction.options.getInteger("amount");
-			const messages = await channel.messages.fetch({ limit: amount });
-			const filtered = messages.filter(
-				(m) => m.member && m.member.roles.cache.has(role.id)
-			);
-			const deleted = await channel.bulkDelete(filtered, true);
-			deletedCount = deleted.size;
-		} else if (subcommand === "filter_by_bots") {
-			const amount = interaction.options.getInteger("amount");
-			const messages = await channel.messages.fetch({ limit: amount });
-			const filtered = messages.filter((m) => m.author.bot);
-			const deleted = await channel.bulkDelete(filtered, true);
-			deletedCount = deleted.size;
-		}
+		if (user) messages = messages.filter((m) => m.author.id === user.id);
+		if (role) messages = messages.filter((m) => m.member && m.member.roles.cache.has(role.id));
+		if (botsOnly) messages = messages.filter((m) => m.author.bot);
 
-		// Step 2: Update the status message
+		const deleted = await channel.bulkDelete(messages, true);
+		const deletedCount = deleted.size;
+
 		let text;
-		if (deletedCount === 0) {
-			text = "⚠️ No messages could be deleted.";
-		} else if (deletedCount === 1) {
-			text = "🧹 1 message has been deleted.";
-		} else {
-			text = `🧹 ${deletedCount} messages have been deleted.`;
-		}
+		if (deletedCount === 0) text = "⚠️ No messages could be deleted.";
+		else if (deletedCount === 1) text = "🧹 1 message has been deleted.";
+		else text = `🧹 ${deletedCount} messages have been deleted.`;
 
 		await statusMessage.edit(text);
 
-		// Step 3: Delete the status message after 2 seconds
-		setTimeout(() => {
-			statusMessage.delete().catch(() => {});
-		}, 2000);
+		setTimeout(() => statusMessage.delete().catch(() => {}), 2000);
 
 		await interaction.editReply({ content: "✅ Finished!", ephemeral: true });
 	},
