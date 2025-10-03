@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const Guild = require('../models/Guild');
+const Guild = require('../models/guild');
 
 const responses = JSON.parse(fs.readFileSync(path.join(__dirname, '../utils', 'cheapResponse.json'), 'utf-8'));
 
