@@ -31,6 +31,14 @@ const Guild = sequelize.define('Guild', {
         type: DataTypes.STRING,
         defaultValue: null,
     },
+    eggResponsesEnabled: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+    },
+    cheapResponsesEnabled: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+    }
 }, {
     tableName: 'guild',
     timestamps: false,

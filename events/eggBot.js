@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const Guild = require('../models/Guild');
 
 const responses = JSON.parse(fs.readFileSync(path.join(__dirname, '../utils', 'eggResponse.json'), 'utf-8'));
 
@@ -7,6 +8,9 @@ module.exports = {
   name: 'messageCreate',
   async execute(message) {
     if (message.author.bot) return;
+
+    const guildConfig = await Guild.findByPk(message.guildId);
+    if (!guildConfig || !guildConfig.eggResponsesEnabled) return;
 
     const msg = message.content.toLowerCase();
 
