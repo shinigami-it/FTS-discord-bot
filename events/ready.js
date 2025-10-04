@@ -5,11 +5,24 @@ const chalk = require('chalk');
 const { Op } = require("sequelize");
 const Warning = require("../models/warning");
 require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
 
 module.exports = {
     name: 'ready',
     once: true,
     async execute(client) {
+        const filePath = path.join(__dirname, '../utils/FTS_KR_roleSync.js');
+
+        if (fs.existsSync(filePath)) {
+            try {
+                require(filePath)(client);
+                console.log('FTS_KR_roleSync.js loaded');
+            } catch (err) {
+                console.error('Failed to load FTS_KR_roleSync.js', err);
+            }
+        }
+
         console.log(chalk.magenta.bold.underline(`Logged in as ${client.user.tag} ✅`));
 
         client.user.setActivity('Fujiwara Tofu Shop', {
@@ -56,7 +69,6 @@ module.exports = {
             }
         }
 
-        // Automatic warning expiration check
         setInterval(async () => {
             const now = new Date();
             const expiredWarnings = await Warning.findAll({
@@ -82,6 +94,6 @@ module.exports = {
 
                 console.log(chalk.yellow(`⏱ Warning ${warn.id} expired and was deactivated.`));
             }
-        }, 60 * 60 * 1000); // run every hour
+        }, 60 * 60 * 1000);
     }
 };
