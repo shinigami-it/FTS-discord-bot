@@ -1,4 +1,4 @@
-const { DataTypes } = require('sequelize'); 
+const { DataTypes } = require('sequelize');
 const sequelize = require('../utils/database');
 
 const Warning = sequelize.define('Warning', {
@@ -31,6 +31,14 @@ const Warning = sequelize.define('Warning', {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
     },
+    expiresAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
+    deactivationReason: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    }
 }, {
     tableName: 'warnings',
     timestamps: false,

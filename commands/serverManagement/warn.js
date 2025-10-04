@@ -23,13 +23,21 @@ module.exports = {
                 .addStringOption(option =>
                     option.setName("reason")
                         .setDescription("Reason for the warning")
-                        .setRequired(true)))
+                        .setRequired(true))
+                .addBooleanOption(option =>
+                    option.setName("permanent")
+                        .setDescription("Should this warning never expire?")
+                        .setRequired(false)))
         .addSubcommand(sub =>
             sub.setName("deactivate")
                 .setDescription("Deactivate a specific warning")
                 .addIntegerOption(option =>
                     option.setName("warnid")
                         .setDescription("ID of the warning to deactivate")
+                        .setRequired(true))
+                .addStringOption(option =>
+                    option.setName("reason")
+                        .setDescription("Reason for deactivating the warning")
                         .setRequired(true)))
         .addSubcommand(sub =>
             sub.setName("activate")
@@ -57,14 +65,21 @@ module.exports = {
         if (subcommand === "add") {
             const target = interaction.options.getUser("user");
             const reason = interaction.options.getString("reason");
+            const permanent = interaction.options.getBoolean("permanent") ?? false;
             const moderator = interaction.user;
             const member = await interaction.guild.members.fetch(target.id);
+
+            const now = new Date();
+            const expires = permanent ? null : new Date(now.getTime() + 30*24*60*60*1000); // +30 Tage
 
             await Warning.create({
                 guildId,
                 userId: target.id,
                 moderatorId: moderator.id,
-                reason: reason
+                reason: reason,
+                active: true,
+                timestamp: now,
+                expiresAt: expires
             });
 
             // Fetch active warnings for FTS role logic
@@ -105,68 +120,43 @@ module.exports = {
                 .addFields(
                     { name: "User", value: `<@${target.id}>`, inline: true },
                     { name: "Moderator", value: `<@${moderator.id}>`, inline: true },
-                    { name: "Reason", value: reason }
+                    { name: "Reason", value: reason },
+                    { name: "Timestamp", value: `<t:${Math.floor(now.getTime()/1000)}:F>` },
+                    { name: "Expires", value: permanent ? "❌ Permanent" : `<t:${Math.floor(expires.getTime()/1000)}:F>` }
                 )
                 .setTimestamp();
 
             await interaction.reply({ embeds: [embed] });
 
-        } else if (subcommand === "deactivate" || subcommand === "activate") {
+        } else if (subcommand === "deactivate") {
             const warnId = interaction.options.getInteger("warnid");
+            const reason = interaction.options.getString("reason");
+                
             const warn = await Warning.findOne({ where: { id: warnId, guildId } });
             if (!warn) return interaction.reply({ content: `Warning ID ${warnId} not found in this server.`, ephemeral: true });
-
-            const newActive = subcommand === "activate";
-            if (warn.active === newActive) {
-                return interaction.reply({ content: `Warning ID ${warnId} is already ${newActive ? "active" : "deactivated"}.`, ephemeral: true });
+                
+            if (!warn.active) {
+                return interaction.reply({ content: `Warning ID ${warnId} is already deactivated.`, ephemeral: true });
             }
-
-            await Warning.update({ active: newActive }, { where: { id: warnId, guildId } });
-
+        
+            await Warning.update(
+                { active: false, deactivationReason: reason },
+                { where: { id: warnId, guildId } }
+            );
+        
             const embed = new EmbedBuilder()
-                .setTitle(`Warning ${newActive ? "Activated" : "Deactivated"}`)
-                .setColor(newActive ? "Green" : "Red")
+                .setTitle(`Warning Deactivated`)
+                .setColor("Red")
                 .addFields(
                     { name: "Warn ID", value: `${warn.id}`, inline: true },
                     { name: "User", value: `<@${warn.userId}>`, inline: true },
-                    { name: newActive ? "Activated by" : "Deactivated by", value: `<@${interaction.user.id}>`, inline: true },
-                    { name: "Reason", value: warn.reason }
+                    { name: "Deactivated by", value: `<@${interaction.user.id}>`, inline: true },
+                    { name: "Original Reason", value: warn.reason },
+                    { name: "Deactivation Reason", value: reason }
                 )
                 .setTimestamp();
-
+            
             await interaction.reply({ embeds: [embed] });
-
-        } else if (subcommand === "list") {
-            const target = interaction.options.getUser("user");
-            const inactive = interaction.options.getBoolean("inactive") ?? false;
-
-            let where = { guildId, active: !inactive };
-            if (target) where.userId = target.id;
-
-            const warnings = await Warning.findAll({
-                where,
-                order: [['id', 'DESC']],
-                limit: 20
-            });
-
-            if (!warnings.length) {
-                return interaction.reply({ content: "No warnings found.", ephemeral: true });
-            }
-
-            const embed = new EmbedBuilder()
-                .setTitle(target ? `Warnings for ${target.tag} (${warnings.length})` : `Last 20 ${inactive ? "inactive" : "active"} warnings`)
-                .setColor("#ff0000")
-                .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() });
-
-            for (const warn of warnings) {
-                const unixTimestamp = Math.floor(new Date(warn.timestamp).getTime() / 1000);
-                embed.addFields({
-                    name: `⏱ <t:${unixTimestamp}:F>`,
-                    value: `Warn ID (${warn.id}) - By <@${warn.moderatorId}>\nUser: <@${warn.userId}>\n\`\`\`${warn.reason}\`\`\``
-                });
-            }
-
-            await interaction.reply({ embeds: [embed], ephemeral: true });
         }
     }
 };

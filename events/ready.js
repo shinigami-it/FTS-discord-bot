@@ -2,16 +2,17 @@ const { ActivityType } = require('discord.js');
 const Guild = require('../models/guild');
 const { updateEventDrivers, updateTeamMembers } = require('../utils/updateStats');
 const chalk = require('chalk');
+const { Op } = require("sequelize");
+const Warning = require("../models/warning");
 require('dotenv').config();
-console.log(Guild); // sollte ein Sequelize Model zeigen
-console.log(typeof Guild.findOne);
+
 module.exports = {
     name: 'ready',
     once: true,
     async execute(client) {
         console.log(chalk.magenta.bold.underline(`Logged in as ${client.user.tag} ✅`));
 
-        client.user.setActivity('FTS - The Future is incoming', {
+        client.user.setActivity('Fujiwara Tofu Shop', {
             type: ActivityType.Streaming,
             url: 'https://twitch.tv/dashund007'
         });
@@ -54,5 +55,33 @@ module.exports = {
                 console.error(chalk.red(`Error updating member count for ${guild.name}:`, error));
             }
         }
+
+        // Automatic warning expiration check
+        setInterval(async () => {
+            const now = new Date();
+            const expiredWarnings = await Warning.findAll({
+                where: {
+                    active: true,
+                    expiresAt: { [Op.lte]: now }
+                }
+            });
+
+            for (const warn of expiredWarnings) {
+                await warn.update({
+                    active: false,
+                    deactivationReason: "Expired (1 month)"
+                });
+
+                const MOD_CHANNEL_ID = "1150146916194193640"; 
+                const channel = client.channels.cache.get(MOD_CHANNEL_ID);
+                if (channel) {
+                    await channel.send({
+                        content: `⚠️ Warning **${warn.id}** for <@${warn.userId}> expired automatically (1 month).`
+                    });
+                }
+
+                console.log(chalk.yellow(`⏱ Warning ${warn.id} expired and was deactivated.`));
+            }
+        }, 60 * 60 * 1000); // run every hour
     }
 };
