@@ -1,4 +1,4 @@
-const { ActivityType } = require('discord.js');
+const { ActivityType, ChannelType } = require('discord.js');
 const Guild = require('../models/guild');
 const { updateEventDrivers, updateTeamMembers } = require('../utils/updateStats');
 const chalk = require('chalk');
@@ -9,10 +9,10 @@ const path = require('path');
 const fs = require('fs');
 
 module.exports = {
-    name: 'ready',
+    name: 'clientReady',
     once: true,
     async execute(client) {
-        const filePath = path.join(__dirname, '../utils/FTS_KR_roleSync.js');
+        /*const filePath = path.join(__dirname, '../utils/FTS_KR_roleSync.js');
 
         if (fs.existsSync(filePath)) {
             try {
@@ -21,7 +21,7 @@ module.exports = {
             } catch (err) {
                 console.error('Failed to load FTS_KR_roleSync.js', err);
             }
-        }
+        }*/
 
         console.log(chalk.magenta.bold.underline(`Logged in as ${client.user.tag} ✅`));
 
@@ -33,11 +33,13 @@ module.exports = {
         let memberCountsOld = {};
 
         client.on('guildMemberAdd', async (member) => {
+            if (!member.guild) return;
             await updateMemberCount(member.guild);
             updateTeamMembers(member.guild);
         });
 
         client.on('guildMemberRemove', async (member) => {
+            if (!member.guild) return;
             await updateMemberCount(member.guild);
             updateTeamMembers(member.guild);
         });
@@ -57,15 +59,15 @@ module.exports = {
                     memberCountsOld[guild.id] = totalMembers;
                     const guildData = await Guild.findOne({ where: { id: guild.id } });
                     if (guildData && guildData.memberCountChannelId) {
-                        const memberCountChannel = await guild.channels.fetch(guildData.memberCountChannelId);
-                        if (memberCountChannel) {
+                        const memberCountChannel = await guild.channels.fetch(guildData.memberCountChannelId).catch(()=>null);
+                        if (memberCountChannel && memberCountChannel.type === ChannelType.GuildVoice) {
                             await memberCountChannel.setName(`Members: ${totalMembers}`);
                             console.log(chalk.green(`Updated member count for `) + chalk.red.bold(`${guild.name}: ${totalMembers}\n`));
                         }
                     }
                 }
             } catch (error) {
-                console.error(chalk.red(`Error updating member count for ${guild.name}:`, error));
+                console.error(chalk.red(`Error updating member count for ${guild.name}:`), error);
             }
         }
 
@@ -85,7 +87,7 @@ module.exports = {
                 });
 
                 const MOD_CHANNEL_ID = "1150146916194193640"; 
-                const channel = client.channels.cache.get(MOD_CHANNEL_ID);
+                const channel = await client.channels.fetch(MOD_CHANNEL_ID).catch(()=>null);
                 if (channel) {
                     await channel.send({
                         content: `⚠️ Warning **${warn.id}** for <@${warn.userId}> expired automatically (1 month).`
